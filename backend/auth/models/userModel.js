@@ -11,6 +11,9 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    fullName: String,
+    yearsOfExperience: Number,
+    role: String,
   },
   {
     timestamps: true,
