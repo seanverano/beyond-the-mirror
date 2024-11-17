@@ -1,46 +1,27 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Plus,
-  Video,
-  List,
-  Loader2,
-  Pencil,
-  Check,
-  X,
-  Trash2,
-} from "lucide-react";
+import DashboardHeader from "../components/dash_page_component/DashboardHeader";
+import InterviewCard from "../components/dash_page_component/InterviewCard";
+import QuestionCard from "../components/dash_page_component/QuestionCard";
+import useQuestions from "../hooks/useQuestions";
 
 const DashboardPage = () => {
-  const [questions, setQuestions] = useState([]);
-  const [newQuestion, setNewQuestion] = useState("");
   const [isStarting, setIsStarting] = useState(false);
-  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-  const [editedText, setEditedText] = useState("");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchQuestions();
-  }, []);
-
-  const fetchQuestions = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:1017/api/v1/questions", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch questions");
-      const data = await response.json();
-      setQuestions(data.questions);
-    } catch (error) {
-      console.error("Failed to fetch questions:", error);
-      setQuestions([]);
-    }
-  };
+  const {
+    questions,
+    newQuestion,
+    isAddingQuestion,
+    editingQuestion,
+    editedText,
+    setNewQuestion,
+    addQuestion,
+    deleteQuestion,
+    updateQuestion,
+    startEditing,
+    cancelEditing,
+    setEditedText,
+  } = useQuestions();
 
   const startNewInterview = async () => {
     if (isStarting || questions.length === 0) return;
@@ -74,221 +55,30 @@ const DashboardPage = () => {
     }
   };
 
-  const addQuestion = async (e) => {
-    e.preventDefault();
-    if (!newQuestion.trim() || isAddingQuestion) return;
-
-    try {
-      setIsAddingQuestion(true);
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:1017/api/v1/questions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ text: newQuestion }),
-      });
-
-      if (!response.ok) throw new Error("Failed to add question");
-
-      await fetchQuestions();
-      setNewQuestion("");
-    } catch (error) {
-      console.error("Failed to add question:", error);
-    } finally {
-      setIsAddingQuestion(false);
-    }
-  };
-
-  const deleteQuestion = async (questionId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:1017/api/v1/questions/${questionId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!response.ok) throw new Error("Failed to delete question");
-      await fetchQuestions();
-    } catch (error) {
-      console.error("Failed to delete question:", error);
-    }
-  };
-
-  const startEditing = (question) => {
-    setEditingQuestion(question._id);
-    setEditedText(question.text);
-  };
-
-  const cancelEditing = () => {
-    setEditingQuestion(null);
-    setEditedText("");
-  };
-
-  const updateQuestion = async (questionId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:1017/api/v1/questions/${questionId}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: editedText }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to update question");
-      await fetchQuestions();
-      setEditingQuestion(null);
-      setEditedText("");
-    } catch (error) {
-      console.error("Failed to update question:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#F8F2E8]">
-      <header className="bg-[#5F4B3A] text-white p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="font-vt text-2xl">BeyondTheMirror AI</h1>
-        </div>
-      </header>
-
+      <DashboardHeader />
       <main className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-[#FCF9F4]">
-            <CardHeader>
-              <CardTitle className="font-jakarta text-xl text-[#5F4B3A]">
-                Start Interview
-              </CardTitle>
-              <p className="text-[#000000]/70 font-jakarta">
-                Begin your mock interview session with AI-powered feedback.
-                {questions.length > 5 && (
-                  <span className="block text-sm text-orange-500 mt-1">
-                    Note: Only the first 5 questions will be used in the
-                    interview.
-                  </span>
-                )}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full bg-[#5F4B3A] hover:bg-[#4A3829] disabled:opacity-50"
-                onClick={startNewInterview}
-                disabled={isStarting || questions.length === 0}
-              >
-                {isStarting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Video className="mr-2 h-4 w-4" />
-                )}
-                {isStarting ? "Starting Session..." : "Start New Session"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-[#FCF9F4]">
-            <CardHeader>
-              <CardTitle className="font-jakarta text-xl text-[#5F4B3A]">
-                Questions
-              </CardTitle>
-              <p className="text-[#000000]/70 font-jakarta">
-                Create, update, or delete your questions.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={addQuestion} className="flex gap-2 mb-4">
-                <Input
-                  placeholder="Add a new question"
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  className="flex-1"
-                  disabled={isAddingQuestion}
-                />
-                <Button
-                  type="submit"
-                  className="bg-[#5F4B3A] hover:bg-[#4A3829] disabled:opacity-50"
-                  disabled={isAddingQuestion}
-                >
-                  {isAddingQuestion ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Plus className="h-4 w-4" />
-                  )}
-                </Button>
-              </form>
-              <div className="space-y-2">
-                {questions.map((question) => (
-                  <div
-                    key={question._id}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
-                  >
-                    <div className="flex items-center flex-1 min-w-0">
-                      <List className="h-4 w-4 mr-2 flex-shrink-0 text-[#5F4B3A]" />
-                      {editingQuestion === question._id ? (
-                        <Input
-                          value={editedText}
-                          onChange={(e) => setEditedText(e.target.value)}
-                          className="flex-1 mr-2"
-                        />
-                      ) : (
-                        <span className="font-jakarta text-sm truncate">
-                          {question.text}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex space-x-2 ml-2">
-                      {editingQuestion === question._id ? (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-green-500 hover:text-green-700"
-                            onClick={() => updateQuestion(question._id)}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-gray-500 hover:text-gray-700"
-                            onClick={cancelEditing}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-blue-500 hover:text-blue-700"
-                            onClick={() => startEditing(question)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => deleteQuestion(question._id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <InterviewCard
+            questions={questions}
+            isStarting={isStarting}
+            onStartInterview={startNewInterview}
+          />
+          <QuestionCard
+            questions={questions}
+            newQuestion={newQuestion}
+            isAddingQuestion={isAddingQuestion}
+            editingQuestion={editingQuestion}
+            editedText={editedText}
+            onAddQuestion={addQuestion}
+            onQuestionChange={setNewQuestion}
+            onStartEditing={startEditing}
+            onCancelEditing={cancelEditing}
+            onUpdateQuestion={updateQuestion}
+            onDeleteQuestion={deleteQuestion}
+            onEditChange={setEditedText}
+          />
         </div>
       </main>
     </div>
