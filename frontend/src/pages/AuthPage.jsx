@@ -106,7 +106,7 @@ const AuthPage = () => {
           <div className="w-1/2 flex flex-col justify-center items-center h-full bg-[#F8F2E8]">
             <img
               src={auth_hero}
-              alt="BeyondTheMirror AI Logo"
+              alt="Auth Page Hero Image"
               className="w-[75%] h-[75%] object-contain"
             />
             <h1 className="font-jakarta text-xl font-bold text-[#5F4B3A]">
@@ -180,9 +180,12 @@ const AuthPage = () => {
       <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
         <DialogContent className="bg-[#FCF9F4] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-vt text-3xl text-center font-normal">
+            <DialogTitle className="font-vt text-4xl text-center font-normal">
               Create Account
             </DialogTitle>
+            <h2 className="font-jakarta text-base font-semibold text-center mb-6 text-[#000000]/50">
+              Once you register, you’ll automatically be logged in.
+            </h2>
           </DialogHeader>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
@@ -231,7 +234,7 @@ const AuthPage = () => {
               type="submit"
               disabled={isLoading}
             >
-              {isLoading ? "Creating Account..." : "Create Account"}
+              {isLoading ? "Creating Account..." : "Register"}
             </Button>
           </form>
         </DialogContent>
