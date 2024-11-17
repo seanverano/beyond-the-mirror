@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DashboardHeader from "../components/dash_page_component/DashboardHeader";
-import InterviewCard from "../components/dash_page_component/InterviewCard";
-import QuestionCard from "../components/dash_page_component/QuestionCard";
-import useQuestions from "../hooks/useQuestions";
+import DashboardHeader from "@/components/dash_page_component/DashboardHeader";
+import InterviewCard from "@/components/dash_page_component/InterviewCard";
+import QuestionCard from "@/components/dash_page_component/QuestionCard";
+import useQuestions from "@/hooks/useQuestions";
 
 const DashboardPage = () => {
   const [isStarting, setIsStarting] = useState(false);

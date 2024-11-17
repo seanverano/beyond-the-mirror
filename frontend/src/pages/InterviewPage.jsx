@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import InterviewHeader from "../components/interview_page_components/InterviewHeader";
-import QuestionCardTwo from "../components/interview_page_components/QuestionCardTwo";
-import ResponseTypeSelector from "../components/interview_page_components/ResponseTypeSelector";
-import TextInput from "../components/interview_page_components/TextInput";
-import VoiceInput from "../components/interview_page_components/VoiceInput";
-import ProgressBar from "../components/interview_page_components/ProgressBar";
-import useSpeechRecognition from "../hooks/useSpeechRecognition";
+import InterviewHeader from "@/components/interview_page_components/InterviewHeader";
+import QuestionCardTwo from "@/components/interview_page_components/QuestionCardTwo";
+import ResponseTypeSelector from "@/components/interview_page_components/ResponseTypeSelector";
+import TextInput from "@/components/interview_page_components/TextInput";
+import VoiceInput from "@/components/interview_page_components/VoiceInput";
+import ProgressBar from "@/components/interview_page_components/ProgressBar";
+import useSpeechRecognition from "@/hooks/useSpeechRecognition";
 
 const InterviewPage = () => {
   const { id } = useParams();

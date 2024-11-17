@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import LoginForm from "../components/auth_page_components/LoginForm";
-import RegisterDialog from "../components/auth_page_components/RegisterDialog";
-import HeroSection from "../components/auth_page_components/HeroSection";
+import LoginForm from "@/components/auth_page_components/LoginForm";
+import RegisterDialog from "@/components/auth_page_components/RegisterDialog";
+import HeroSection from "@/components/auth_page_components/HeroSection";
 
 const AuthPage = () => {
   const navigate = useNavigate();
