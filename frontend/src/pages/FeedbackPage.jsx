@@ -103,12 +103,14 @@ const FeedbackPage = () => {
                             <p className="text-sm text-gray-500">Feedback:</p>
                             <p className="text-base">{question.feedback}</p>
                           </div>
-                          <div className="flex items-center space-x-2 mt-2">
+                          <div className="flex flex-col mt-2">
                             <p className="text-sm text-gray-500">Rating:</p>
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            <span className="font-semibold">
-                              {question.rating}/5
-                            </span>
+                            <div className="flex flex-row items-center gap-2">
+                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                              <span className="font-semibold">
+                                {question.rating}/5
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <div>
