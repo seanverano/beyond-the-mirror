@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Send, Type, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import InterviewHeader from "../components/interview_page_components/InterviewHeader";
+import QuestionCardTwo from "../components/interview_page_components/QuestionCardTwo";
+import ResponseTypeSelector from "../components/interview_page_components/ResponseTypeSelector";
+import TextInput from "../components/interview_page_components/TextInput";
+import VoiceInput from "../components/interview_page_components/VoiceInput";
+import ProgressBar from "../components/interview_page_components/ProgressBar";
+import useSpeechRecognition from "../hooks/useSpeechRecognition";
 
 const InterviewPage = () => {
   const { id } = useParams();
@@ -13,7 +17,8 @@ const InterviewPage = () => {
   const [textAnswer, setTextAnswer] = useState("");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const recognitionRef = useRef(null);
+
+  const recognitionRef = useSpeechRecognition(setTextAnswer);
 
   useEffect(() => {
     fetchInterview();
@@ -47,59 +52,6 @@ const InterviewPage = () => {
       );
     } catch (error) {
       console.error("Failed to fetch interview:", error);
-    }
-  };
-
-  useEffect(() => {
-    if ("webkitSpeechRecognition" in window) {
-      const recognition = new webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = "en-US";
-
-      recognition.onresult = (event) => {
-        let finalTranscript = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscript) {
-          setTextAnswer((prev) => prev + " " + finalTranscript);
-        }
-      };
-
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setIsRecording(false);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const startRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.start();
-      setIsRecording(true);
-      setTextAnswer("");
-    }
-  };
-
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
     }
   };
 
@@ -149,165 +101,61 @@ const InterviewPage = () => {
     }
   };
 
+  const startRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.start();
+      setIsRecording(true);
+      setTextAnswer("");
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
   if (!interview) return null;
 
   const currentQuestion = interview.questions[currentQuestionIndex];
 
   return (
     <div className="min-h-screen bg-[#F8F2E8]">
-      <header className="bg-[#5F4B3A] text-white p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Button
-            variant="ghost"
-            className="text-white hover:text-[#5F4B3A] hover:bg-[#F8F2E8] font-vt text-2xl font-normal"
-            onClick={() => navigate("/dashboard")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Dashboard
-          </Button>
-        </div>
-      </header>
-
+      <InterviewHeader />
       <main className="max-w-4xl mx-auto p-6">
-        <Card className="mb-6 bg-[#FCF9F4]">
-          <CardContent className="p-6">
-            <h2 className="font-jakarta text-xl font-semibold mb-2">
-              {currentQuestion?.text || "Loading question..."}
-            </h2>
-            <p className="text-sm text-gray-500">
-              Question {currentQuestionIndex + 1} of{" "}
-              {interview.questions.length}
-            </p>
-          </CardContent>
-        </Card>
+        <QuestionCardTwo
+          question={currentQuestion}
+          currentIndex={currentQuestionIndex}
+          totalQuestions={interview.questions.length}
+        />
 
-        {!inputMode && (
-          <>
-            <p className="text-center mb-4 text-[#000000] font-jakarta">
-              Choose your response method:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                className="h-32 bg-[#5F4B3A] hover:bg-[#4A3829]"
-                onClick={() => setInputMode("text")}
-              >
-                <div className="flex flex-col items-center">
-                  <Type className="h-8 w-8 mb-2" />
-                  <span className="font-jakarta text-lg">Type Response</span>
-                </div>
-              </Button>
-              <Button
-                className="h-32 bg-[#5F4B3A] hover:bg-[#4A3829]"
-                onClick={() => setInputMode("voice")}
-              >
-                <div className="flex flex-col items-center">
-                  <Mic className="h-8 w-8 mb-2" />
-                  <span className="font-jakarta text-lg">Voice Response</span>
-                </div>
-              </Button>
-            </div>
-          </>
-        )}
+        {!inputMode && <ResponseTypeSelector onSelectMode={setInputMode} />}
 
         {inputMode === "text" && (
-          <Card className="bg-[#FCF9F4]">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <textarea
-                  className="w-full h-32 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#5F4B3A]"
-                  placeholder="Type your answer here..."
-                  value={textAnswer}
-                  onChange={(e) => setTextAnswer(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <Button
-                    className="bg-[#5F4B3A] hover:bg-[#4A3829]"
-                    onClick={handleSubmitAnswer}
-                    disabled={!textAnswer.trim() || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
-                        Submitting...
-                      </div>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Submit Answer
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TextInput
+            value={textAnswer}
+            onChange={setTextAnswer}
+            onSubmit={handleSubmitAnswer}
+            isSubmitting={isSubmitting}
+          />
         )}
 
         {inputMode === "voice" && (
-          <Card className="bg-[#FCF9F4]">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center space-y-4">
-                <Button
-                  className={`rounded-full p-8 ${
-                    isRecording
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-[#5F4B3A] hover:bg-[#4A3829]"
-                  }`}
-                  onClick={isRecording ? stopRecording : startRecording}
-                >
-                  {isRecording ? (
-                    <MicOff className="h-8 w-8" />
-                  ) : (
-                    <Mic className="h-8 w-8" />
-                  )}
-                </Button>
-                <p className="font-jakarta text-center">
-                  {isRecording
-                    ? "Recording in progress... Click to stop"
-                    : "Click to start recording"}
-                </p>
-                {textAnswer && (
-                  <div className="w-full space-y-4">
-                    <div className="p-4 bg-white rounded-lg">
-                      <h3 className="font-jakarta font-semibold mb-2">
-                        Transcribed Text:
-                      </h3>
-                      <p>{textAnswer}</p>
-                    </div>
-                    <Button
-                      className="w-full bg-[#5F4B3A] hover:bg-[#4A3829]"
-                      onClick={handleSubmitAnswer}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
-                          Processing...
-                        </div>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Submit Answer
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <VoiceInput
+            isRecording={isRecording}
+            onStartRecording={startRecording}
+            onStopRecording={stopRecording}
+            transcribedText={textAnswer}
+            onSubmit={handleSubmitAnswer}
+            isSubmitting={isSubmitting}
+          />
         )}
 
-        <div className="mt-6 bg-white rounded-full h-2">
-          <div
-            className="bg-[#5F4B3A] h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${
-                ((currentQuestionIndex + 1) / interview.questions.length) * 100
-              }%`,
-            }}
-          />
-        </div>
+        <ProgressBar
+          currentIndex={currentQuestionIndex}
+          totalQuestions={interview.questions.length}
+        />
       </main>
     </div>
   );

@@ -107,7 +107,7 @@ const FeedbackPage = () => {
                             <p className="text-sm text-gray-500">Rating:</p>
                             <div className="flex flex-row items-center gap-2">
                               <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                              <span className="font-semibold">
+                              <span className="text-base">
                                 {question.rating}/5
                               </span>
                             </div>
