@@ -60,11 +60,11 @@ const FeedbackPage = () => {
         <div className="max-w-7xl mx-auto flex items-center">
           <Button
             variant="ghost"
-            className="text-white hover:text-white/80"
+            className="text-white hover:text-[#5F4B3A] hover:bg-[#F8F2E8] font-vt text-2xl font-normal"
             onClick={() => navigate("/dashboard")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Dashboard
           </Button>
         </div>
       </header>

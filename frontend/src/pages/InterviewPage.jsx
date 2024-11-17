@@ -159,11 +159,11 @@ const InterviewPage = () => {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Button
             variant="ghost"
-            className="text-white hover:text-white/80"
+            className="text-white hover:text-[#5F4B3A] hover:bg-[#F8F2E8] font-vt text-2xl font-normal"
             onClick={() => navigate("/dashboard")}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Dashboard
           </Button>
         </div>
       </header>
@@ -228,7 +228,7 @@ const InterviewPage = () => {
                     {isSubmitting ? (
                       <div className="flex items-center">
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2" />
-                        Processing...
+                        Submitting...
                       </div>
                     ) : (
                       <>

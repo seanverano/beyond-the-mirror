@@ -7,19 +7,16 @@ import {
   Plus,
   Video,
   List,
-  User,
-  Trash2,
   Loader2,
   Pencil,
   Check,
   X,
-  Star,
+  Trash2,
 } from "lucide-react";
 
 const DashboardPage = () => {
   const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState("");
-  const [interviews, setInterviews] = useState([]);
   const [isStarting, setIsStarting] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
@@ -27,7 +24,6 @@ const DashboardPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchInterviews();
     fetchQuestions();
   }, []);
 
@@ -46,24 +42,9 @@ const DashboardPage = () => {
     }
   };
 
-  const fetchInterviews = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:1017/api/v1/interviews", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to fetch interviews");
-      const data = await response.json();
-      setInterviews(data);
-    } catch (error) {
-      console.error("Failed to fetch interviews:", error);
-    }
-  };
-
   const startNewInterview = async () => {
     if (isStarting || questions.length === 0) return;
 
-    // Only allow up to 5 questions
     const selectedQuestions = questions.slice(0, 5);
 
     try {
@@ -90,14 +71,6 @@ const DashboardPage = () => {
       console.error("Failed to create interview:", error);
     } finally {
       setIsStarting(false);
-    }
-  };
-
-  const handleInterviewClick = (interview) => {
-    if (interview.status === "Completed") {
-      navigate(`/feedback/${interview._id}`);
-    } else {
-      alert("This interview hasn't been completed yet. No feedback available.");
     }
   };
 
@@ -184,12 +157,6 @@ const DashboardPage = () => {
       <header className="bg-[#5F4B3A] text-white p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="font-vt text-2xl">BeyondTheMirror AI</h1>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-white hover:text-white/80">
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </Button>
-          </div>
         </div>
       </header>
 
@@ -229,7 +196,7 @@ const DashboardPage = () => {
           <Card className="bg-[#FCF9F4]">
             <CardHeader>
               <CardTitle className="font-jakarta text-xl text-[#5F4B3A]">
-                Create Questions
+                Questions
               </CardTitle>
               <p className="text-[#000000]/70 font-jakarta">
                 Create, update, or delete your questions.
@@ -319,61 +286,6 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-[#FCF9F4] md:col-span-2">
-            <CardHeader>
-              <CardTitle className="font-jakarta text-xl text-[#5F4B3A]">
-                Past Sessions
-              </CardTitle>
-              <p className="text-[#000000]/70 font-jakarta">
-                Review your completed interview sessions.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {interviews.map((interview) => {
-                  const completedQuestions = interview.questions.filter(
-                    (q) => q.answer
-                  ).length;
-                  const averageRating =
-                    interview.status === "Completed"
-                      ? interview.questions.reduce(
-                          (acc, q) => acc + (q.rating || 0),
-                          0
-                        ) / interview.questions.length
-                      : 0;
-
-                  return (
-                    <div
-                      key={interview._id}
-                      className="p-4 bg-white rounded-lg shadow-sm"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-jakarta font-semibold">
-                          {new Date(interview.createdAt).toLocaleDateString()}
-                        </span>
-                        {interview.status === "Completed" && (
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-500 fill-current mr-1" />
-                            <span>{averageRating.toFixed(1)}/5</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-[#000000]/70 mb-3">
-                        Questions answered: {completedQuestions}/
-                        {interview.questions.length}
-                      </p>
-                      <Button
-                        className="w-full bg-[#5F4B3A] hover:bg-[#4A3829]"
-                        onClick={() => handleInterviewClick(interview)}
-                      >
-                        View Feedback
-                      </Button>
-                    </div>
-                  );
-                })}
               </div>
             </CardContent>
           </Card>

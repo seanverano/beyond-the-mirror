@@ -1,43 +1,41 @@
 import Interview from "../models/interviewModel.js";
-import { getGeminiModel } from "../config/gemini.js";
+import Question from "../models/questionModel.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 const interviewController = {
   createInterview: async (req, res) => {
     try {
-      const { questions } = req.body;
-
-      const interview = await Interview.create({
+      const questionIds = req.body.questions.map((q) => q._id);
+      const fullQuestions = await Question.find({
+        _id: { $in: questionIds },
         userId: req.user.userId,
-        questions: questions.map((q) => ({ text: q })),
       });
 
-      res.status(201).json({
-        message: "Interview created successfully",
-        interview,
+      const interview = new Interview({
+        userId: req.user.userId,
+        questions: fullQuestions.map((q) => ({
+          questionRef: q._id,
+          text: q.text,
+        })),
       });
+
+      await interview.save();
+      res.status(201).json({ interview });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error("Error creating interview:", error);
+      res.status(400).json({ message: "Error creating interview" });
     }
   },
 
-  getInterviews: async (req, res) => {
-    try {
-      const interviews = await Interview.find({ userId: req.user.userId }).sort(
-        { createdAt: -1 }
-      );
-
-      res.json(interviews);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  },
-
-  getInterviewById: async (req, res) => {
+  getInterview: async (req, res) => {
     try {
       const interview = await Interview.findOne({
         _id: req.params.id,
         userId: req.user.userId,
-      });
+      }).populate("questions.questionRef");
 
       if (!interview) {
         return res.status(404).json({ message: "Interview not found" });
@@ -45,20 +43,14 @@ const interviewController = {
 
       res.json(interview);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error("Error fetching interview:", error);
+      res.status(500).json({ message: "Error fetching interview" });
     }
   },
 
   submitAnswer: async (req, res) => {
     try {
       const { questionIndex, answer } = req.body;
-
-      if (!answer || questionIndex === undefined) {
-        return res.status(400).json({
-          message: "Missing required fields: answer and questionIndex",
-        });
-      }
-
       const interview = await Interview.findOne({
         _id: req.params.id,
         userId: req.user.userId,
@@ -68,66 +60,53 @@ const interviewController = {
         return res.status(404).json({ message: "Interview not found" });
       }
 
-      if (questionIndex >= interview.questions.length) {
-        return res.status(400).json({ message: "Invalid question index" });
-      }
+      const question = interview.questions[questionIndex];
 
-      const model = getGeminiModel();
+      const prompt = `You are an expert interviewer evaluating technical interview responses. 
+      
+Question: "${question.text}"
+Candidate's Answer: "${answer}"
 
-      const prompt = `
-        You are an expert interviewer evaluating responses. Analyze this response:
+Please provide:
+1. A detailed feedback on the answer (2-3 sentences evaluating accuracy, completeness, and clarity)
+2. A rating from 1-5 where:
+   1 = Completely incorrect or irrelevant
+   2 = Partially correct but major gaps
+   3 = Mostly correct with some minor issues
+   4 = Very good answer with minimal gaps
+   5 = Perfect answer, comprehensive and clear
 
-        Question: ${interview.questions[questionIndex].text}
-        Answer: ${answer}
-
-        Provide a JSON response with exactly this structure, no markdown or code blocks:
-        {
-          "rating": <number between 1-5>,
-          "feedback": "<concise feedback>",
-        }
-      `;
+Format your response exactly like this:
+FEEDBACK: [Your feedback here]
+RATING: [1-5]`;
 
       const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      const response = result.response.text();
 
-      const cleanedResponse = responseText
-        .replace(/```json\s*/g, "")
-        .replace(/```\s*/g, "")
-        .replace(/`/g, "")
-        .trim();
+      const feedbackMatch = response.match(/FEEDBACK: (.*?)(?=RATING:|$)/s);
+      const ratingMatch = response.match(/RATING: (\d)/);
 
-      let evaluation;
-      try {
-        evaluation = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error("Failed to parse Gemini response:", cleanedResponse);
-        throw new Error("Invalid response format from AI model");
+      if (!feedbackMatch || !ratingMatch) {
+        throw new Error("Invalid API response format");
       }
 
-      if (!evaluation.rating || !evaluation.feedback) {
-        throw new Error("Incomplete evaluation from AI model");
-      }
-
-      evaluation.rating = Math.max(1, Math.min(5, Number(evaluation.rating)));
+      const feedback = feedbackMatch[1].trim();
+      const rating = parseInt(ratingMatch[1]);
 
       interview.questions[questionIndex].answer = answer;
-      interview.questions[questionIndex].rating = evaluation.rating;
-      interview.questions[questionIndex].feedback = evaluation.feedback;
+      interview.questions[questionIndex].feedback = feedback;
+      interview.questions[questionIndex].rating = rating;
 
-      if (questionIndex === interview.questions.length - 1) {
+      const allAnswered = interview.questions.every((q) => q.answer);
+      if (allAnswered) {
         interview.status = "completed";
-      } else {
-        interview.status = "in-progress";
       }
 
       await interview.save();
       res.json(interview);
     } catch (error) {
-      console.error("Submit answer error:", error);
-      res.status(500).json({
-        message: "Error submitting answer",
-        error: error.message,
-      });
+      console.error("Error submitting answer:", error);
+      res.status(400).json({ message: "Error submitting answer" });
     }
   },
 };
