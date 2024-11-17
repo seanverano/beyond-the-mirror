@@ -20,7 +20,7 @@ const QuestionCard = ({
     <Card className="bg-[#FCF9F4]">
       <CardHeader>
         <CardTitle className="font-jakarta text-xl text-[#5F4B3A]">
-          Questions
+          Manage Questions
         </CardTitle>
         <p className="text-[#000000]/70 font-jakarta">
           Create, update, or delete your questions.
